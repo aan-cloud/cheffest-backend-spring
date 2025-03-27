@@ -1,0 +1,22 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/order_food
+    username: postgres
+    password: postgres123
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+    hibernate:
+      ddl-auto: update
+  security:
+    oauth2:
+          client:
+            registration:
+              google:
+                client-id: 15061094991-19alsf2g3hp0sp81msq2up21jja1060i.apps.googleusercontent.com
+                client-secret: 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
+                scope: profile,email
+
