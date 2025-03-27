@@ -1,9 +1,11 @@
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/order_food
-    username: postgres
-    password: postgres123
+    url: ${DATABASE_URL}
+    username: ${DATABASE_USERNAME}
+    password: ${DATABASE_PASSWORD}
     driver-class-name: org.postgresql.Driver
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE}
 
   jpa:
     properties:
@@ -16,7 +18,7 @@ spring:
           client:
             registration:
               google:
-                client-id: 15061094991-19alsf2g3hp0sp81msq2up21jja1060i.apps.googleusercontent.com
-                client-secret: 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
+                client-id: ${GOOGLE_CLIENT_ID}
+                client-secret: ${GOOGLE_CLIENT_SECRET}
                 scope: profile,email
 
