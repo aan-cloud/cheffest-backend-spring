@@ -6,7 +6,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class DashboardController {
 
-    @GetMapping("/dashboard")
+    @GetMapping("/")
     public String dashboard() {
         return "Welcome to the dashboard!";
     }
