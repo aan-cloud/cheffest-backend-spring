@@ -1,104 +1,65 @@
-# Cart API Documentation
+# Cheffest Spring API Documentation
 
-## Introduction
-This API is a shopping cart system built with **Spring Boot**, allowing users to add, retrieve, and delete items from their cart.
+## Overview
+Cheffest Spring API is a backend service for managing users, carts, and food items in an online food ordering system. Built using Spring Boot, this API ensures efficient and scalable management of user interactions.
 
 ## Tech Stack
-- **Java 17**
-- **Spring Boot** (Spring Web, Spring Data JPA)
-- **PostgreSQL** (as the database)
-- **Hibernate** (ORM for database interactions)
-- **Maven** (for dependency management)
-- **Lombok** (for reducing boilerplate code)
-- **Docker** (optional, for containerization)
+- **Spring Boot** - Core framework for backend development
+- **Spring Data JPA** - ORM for database operations
+- **Spring Web** - Handles RESTful API endpoints
+- **PostgreSQL** - Database for persistent storage
+- **Jakarta Persistence (JPA)** - Entity mapping and relationships
+- **Lombok** - Reduces boilerplate code
+- **Postman** - API documentation and testing
 
-## API Endpoints
+## Features
+- **Auth system**: Register, login, and profile management
+- **Cart Management**: Add, remove, and update items in the cart
+- **Food Management**: Browse and retrieve food items
+- **Order Processing**: Handle checkout and order placement
 
-### 1. Add Food to Cart
-**Endpoint:** `POST /cart/add`
+## API Documentation
+Full API documentation is available via Postman:
+[Cheffest API Documentation](https://www.postman.com/joint-operations-pilot-8366866/cheffest-spring-api/request/ppmmu06/food?action=share&creator=36210259&ctx=documentation)
 
-**Request Body:**
-```json
-{
-  "foodId": "uuid",
-  "userId": "uuid",
-  "sum": 2
-}
-```
+## Database Schema
+### User Table
+| Column   | Type    | Constraints |
+|----------|--------|-------------|
+| id       | UUID   | Primary Key |
+| name     | String | Unique, Not Null |
+| email    | String | Unique, Not Null |
+| avatarUrl| String | Optional |
 
-**Response:**
-```json
-{
-  "message": "Success add product to cart",
-  "productName": "Pizza",
-  "quantity": 2
-}
-```
+### Cart Table
+| Column  | Type  | Constraints |
+|---------|------|-------------|
+| id      | UUID | Primary Key |
+| user_id | UUID | Foreign Key (Users) |
 
----
+### Cart Items Table
+| Column  | Type  | Constraints |
+|---------|------|-------------|
+| id      | UUID | Primary Key |
+| cart_id | UUID | Foreign Key (Carts) |
+| food_id | UUID | Foreign Key (Foods) |
+| quantity| Int  | Not Null |
 
-### 2. Get User Cart
-**Endpoint:** `GET /cart/user/{userId}`
+## Setup and Installation
+1. Clone the repository:
+   ```sh
+   git clone https://github.com/your-repo/cheffest-spring-api.git
+   ```
+2. Navigate to the project directory:
+   ```sh
+   cd cheffest-spring-api
+   ```
+3. Set up environment variables (database URL, credentials, etc.)
+4. Build and run the project:
+   ```sh
+   ./mvnw spring-boot:run
+   ```
 
-**Response:**
-```json
-{
-  "totalPrice": 29.99,
-  "cart": {
-    "id": "uuid",
-    "userId": "uuid"
-  },
-  "items": [
-    {
-      "id": "uuid",
-      "quantity": 2,
-      "food": {
-        "name": "Pizza",
-        "price": 14.99
-      }
-    }
-  ]
-}
-```
+## Contact & Support
+For any issues or contributions, feel free to raise an issue or contribute via PR in the GitHub repository.
 
----
-
-### 3. Delete Cart Item
-**Endpoint:** `DELETE /cart/item/{cartItemId}/{slug}`
-
-**Response:**
-```json
-{
-  "message": "Success delete product",
-  "productName": "Pizza"
-}
-```
-
-## Installation & Setup
-
-### 1. Clone the Repository
-```sh
-git clone https://github.com/your-repo/cart-api.git
-cd cart-api
-```
-
-### 2. Configure the Database
-Update `application.properties`:
-```properties
-spring.datasource.url=jdbc:postgresql://localhost:5432/cart_db
-spring.datasource.username=your_user
-spring.datasource.password=your_password
-spring.jpa.hibernate.ddl-auto=update
-```
-
-### 3. Run the Application
-```sh
-mvn spring-boot:run
-```
-
-## Deployment
-You can deploy the application for free on the following platforms:
-- **Railway.app**
-
-## Contact
-For any issues, contact **fmuh8403@gmail.com**.
