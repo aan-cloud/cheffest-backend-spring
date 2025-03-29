@@ -2,6 +2,8 @@ package com.cheffest.customer_service_api100.model;
 
 import jakarta.persistence.*;
 import lombok.*;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+
 import java.util.UUID;
 
 @Entity
@@ -23,6 +25,7 @@ public class User {
 
     private String avatarUrl;
 
-    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @JsonManagedReference
     private Cart cart;
 }

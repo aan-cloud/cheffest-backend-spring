@@ -1,19 +1,96 @@
 package com.cheffest.customer_service_api100.controller;
 
+import com.cheffest.customer_service_api100.model.Cart;
+import com.cheffest.customer_service_api100.model.User;
+import com.cheffest.customer_service_api100.repository.CartRepository;
+import com.cheffest.customer_service_api100.repository.UserRepository;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.oauth2.core.user.OAuth2User;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.security.oauth2.jwt.JwtDecoder;
+import org.springframework.security.oauth2.jwt.JwtException;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
 
+    private final UserRepository userRepository;
+    private final CartRepository cartRepository;
+    private final JwtDecoder jwtDecoder;
+
+    public AuthController(UserRepository userRepository, CartRepository cartRepository, JwtDecoder jwtDecoder) {
+        this.userRepository = userRepository;
+        this.cartRepository = cartRepository;
+        this.jwtDecoder = jwtDecoder;
+    }
+
+    @PostMapping("/google")
+    public ResponseEntity<?> authenticateWithGoogle(@RequestBody Map<String, String> requestBody) {
+        String jwtToken = requestBody.get("token");
+
+        if (jwtToken == null || jwtToken.isEmpty()) {
+            return ResponseEntity.badRequest().body("Token is required");
+        }
+
+        try {
+            // Decode JWT dari Google
+            Jwt jwt = jwtDecoder.decode(jwtToken);
+            String email = jwt.getClaimAsString("email");
+
+            // Cek apakah user sudah terdaftar
+            Optional<User> existingUser = userRepository.findByEmail(email);
+            User user;
+            if (existingUser.isPresent()) {
+                user = existingUser.get();
+            } else {
+                // Jika user belum ada, buat user baru
+                user = new User();
+                user.setEmail(email);
+                user.setName(jwt.getClaimAsString("name"));
+                user.setAvatarUrl(jwt.getClaimAsString("picture"));
+                userRepository.save(user);
+            }
+
+            // Cek apakah user sudah memiliki cart, jika belum buatkan cart
+            if (user.getCart() == null) {
+                Cart newCart = new Cart();
+                newCart.setUser(user);
+                cartRepository.save(newCart);
+
+                user.setCart(newCart); // Hubungkan cart ke user
+                userRepository.save(user); // Simpan kembali user dengan cart yang terhubung
+            }
+
+            return ResponseEntity.ok(Map.of(
+                    "message", "Login successful",
+                    "token", jwtToken
+            ));
+
+        } catch (JwtException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid token");
+        }
+    }
+
+
+
     @GetMapping("/me")
-    public Map<String, Object> getUserInfo(@AuthenticationPrincipal OAuth2User user) {
-        return user.getAttributes();
+    public ResponseEntity<Map<String, Object>> getUserInfo(@AuthenticationPrincipal Jwt jwt) {
+        if (jwt == null) {
+            return ResponseEntity.status(401).body(Map.of("error", "Unauthorized - Missing Token"));
+        }
+
+        String email = jwt.getClaimAsString("email");
+        Optional<User> user = userRepository.findByEmail(email);
+
+        if (user.isEmpty()) {
+            return ResponseEntity.status(404).body(Map.of("error", "User not found"));
+        }
+
+        return ResponseEntity.ok(Map.of("userData", user.get()));
     }
 }

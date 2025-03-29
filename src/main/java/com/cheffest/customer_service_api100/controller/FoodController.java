@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/foods")
+@RequestMapping("/api/public/foods")
 public class FoodController {
 
     private final FoodRepository foodRepository;
