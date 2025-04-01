@@ -8,6 +8,7 @@ import com.cheffest.customer_service_api100.request.CartRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import com.cheffest.customer_service_api100.repository.UserRepository;
@@ -35,49 +36,51 @@ public class CartController {
     private CartItemRepository cartItemRepository;
 
     @PostMapping("/add")
+    @Transactional
     public ResponseEntity<?> postFoodToCart(@RequestBody CartRequest cartRequest) {
-        Optional<User> existingUser = userRepository.findById(cartRequest.getUserId());
-        Optional<Food> food = foodRepository.findById(cartRequest.getFoodId());
+        Optional<User> existingUserOpt = userRepository.findById(cartRequest.getUserId());
+        Optional<Food> foodOpt = foodRepository.findById(cartRequest.getFoodId());
 
-        if (existingUser.isEmpty()) {
+        if (existingUserOpt.isEmpty()) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(Map.of("message", "You're not authorized for this content, please login first!"));
         }
-        if (food.isEmpty()) {
+        if (foodOpt.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(Map.of("message", "Product not found!"));
         }
 
-        Optional<Cart> existingCart = cartRepository.findByUserId(existingUser.get().getId());
+        User user = existingUserOpt.get();
+        Food food = foodOpt.get();
 
-        if (existingCart.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(Map.of("message", "User cart is null"));
-        }
+        // Pastikan user memiliki cart, kalau tidak, buat baru
+        Cart cart = cartRepository.findByUserId(user.getId()).orElseGet(() -> {
+            Cart newCart = new Cart();
+            newCart.setUser(user);
+            return cartRepository.save(newCart);
+        });
 
-        UUID cartId = existingCart.get().getId();
-        Optional<CartItem> existingFoodInCart = cartItemRepository.findByCartIdAndFoodId(cartId, food.get().getId());
+        Optional<CartItem> existingFoodInCart = cartItemRepository.findByCartIdAndFoodId(cart.getId(), food.getId());
 
         if (existingFoodInCart.isEmpty()) {
-            // Buat item baru di keranjang
+            // Tambahkan item baru ke keranjang
             CartItem newCartItem = new CartItem();
-            newCartItem.setFood(food.get());
-            newCartItem.setCart(existingCart.get());
+            newCartItem.setFood(food);
+            newCartItem.setCart(cart);
             newCartItem.setQuantity(cartRequest.getSum());
 
             cartItemRepository.save(newCartItem);
 
             return ResponseEntity.ok(Map.of(
                     "message", "Success add product to cart",
-                    "productName", food.get().getName(),
+                    "productName", food.getName(),
                     "quantity", cartRequest.getSum()
             ));
         }
 
-        // Update jumlah produk di keranjang jika sudah ada
+        // Jika sudah ada, update quantity
         CartItem existingItem = existingFoodInCart.get();
         existingItem.setQuantity(existingItem.getQuantity() + cartRequest.getSum());
-
         cartItemRepository.save(existingItem);
 
         return ResponseEntity.ok(Map.of(
@@ -86,6 +89,7 @@ public class CartController {
                 "quantity", existingItem.getQuantity()
         ));
     }
+
 
     @GetMapping("/user/{userId}")
     public ResponseEntity<?> getUserCart(@PathVariable UUID userId) {
