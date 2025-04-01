@@ -12,6 +12,7 @@ import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.JwtException;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
@@ -94,14 +95,20 @@ public class AuthController {
 
             System.out.println("Extracted email: " + email); // Debug email
 
-            Optional<User> user = userRepository.findByEmail(email);
+            Optional<User> userOpt = userRepository.findByEmail(email);
 
-            if (user.isEmpty()) {
+            if (userOpt.isEmpty()) {
                 System.out.println("User not found in database"); // Debug user not found
                 return ResponseEntity.status(404).body(Map.of("error", "User not found"));
             }
 
-            return ResponseEntity.ok(Map.of("userData", user.get()));
+            User user = userOpt.get();
+            Map<String, Object> userDto = new HashMap<>();
+            userDto.put("id", user.getId());
+            userDto.put("email", user.getEmail());
+            userDto.put("name", user.getName());
+
+            return ResponseEntity.ok(Map.of("userData", userDto ));
 
         } catch (Exception e) {
             e.printStackTrace(); // Cetak error di log
