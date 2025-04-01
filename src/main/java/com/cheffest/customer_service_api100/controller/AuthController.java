@@ -79,11 +79,12 @@ public class AuthController {
 
 
     @GetMapping("/me")
-    public ResponseEntity<?> getUserInfo(@RequestHeader("Authorization") String token) {
-        if (token == null) {
+    public ResponseEntity<?> getUserInfo(@RequestHeader("Authorization") String authHeader) {
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             return ResponseEntity.status(401).body(Map.of("error", "Unauthorized - Missing Token"));
         }
 
+        String token = authHeader.substring(7);
         Jwt jwt = this.jwtDecoder.decode(token);
         String email = jwt.getClaimAsString("email");
         Optional<User> user = userRepository.findByEmail(email);
