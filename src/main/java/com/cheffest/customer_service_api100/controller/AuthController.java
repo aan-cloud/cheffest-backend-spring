@@ -85,14 +85,30 @@ public class AuthController {
         }
 
         String token = authHeader.substring(7);
-        Jwt jwt = this.jwtDecoder.decode(token);
-        String email = jwt.getClaimAsString("email");
-        Optional<User> user = userRepository.findByEmail(email);
 
-        if (user.isEmpty()) {
-            return ResponseEntity.status(404).body(Map.of("error", "User not found"));
+        try {
+            System.out.println("Token received: " + token); // Debug token
+
+            Jwt jwt = this.jwtDecoder.decode(token);
+            String email = jwt.getClaimAsString("email");
+
+            System.out.println("Extracted email: " + email); // Debug email
+
+            Optional<User> user = userRepository.findByEmail(email);
+
+            if (user.isEmpty()) {
+                System.out.println("User not found in database"); // Debug user not found
+                return ResponseEntity.status(404).body(Map.of("error", "User not found"));
+            }
+
+            return ResponseEntity.ok(Map.of("userData", user.get()));
+
+        } catch (Exception e) {
+            e.printStackTrace(); // Cetak error di log
+            return ResponseEntity.status(500).body(Map.of(
+                    "error", "Internal Server Error",
+                    "message", e.getMessage()
+            ));
         }
-
-        return ResponseEntity.ok(Map.of("userData", user.get()));
     }
 }
