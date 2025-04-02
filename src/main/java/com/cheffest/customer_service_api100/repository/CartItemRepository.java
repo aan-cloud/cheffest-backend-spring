@@ -9,7 +9,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Repository
-public interface CartItemRepository extends JpaRepository<CartItem, String> {
+public interface CartItemRepository extends JpaRepository<CartItem, UUID> {
     Optional<CartItem> findByCartIdAndFoodId(UUID cartId, UUID id);
 
     Optional<CartItem> findByCartId(UUID id);
