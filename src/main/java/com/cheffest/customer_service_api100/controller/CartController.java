@@ -15,6 +15,7 @@ import com.cheffest.customer_service_api100.repository.UserRepository;
 import com.cheffest.customer_service_api100.repository.FoodRepository;
 import com.cheffest.customer_service_api100.repository.CartRepository;
 import com.cheffest.customer_service_api100.repository.CartItemRepository;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
 import java.util.*;
@@ -119,23 +120,27 @@ public class CartController {
     }
 
     @DeleteMapping("/delete/{cartItemId}/{slug}")
+    @Transactional
     public ResponseEntity<?> deleteCartItem(@PathVariable UUID cartItemId, @PathVariable String slug) {
-        Optional<Food> product = foodRepository.findBySlug(slug);
-        if (product.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Product not found");
-        }
+        // Fetch food entity
+        Food food = foodRepository.findBySlug(slug)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Product not found"));
 
-        Optional<CartItem> cartItem = cartItemRepository.findById(Set.of(cartItemId).toString());
-        if (cartItem.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Cart item not found");
-        }
+        // Fetch cart item
+        CartItem cartItem = cartItemRepository.findByCartId(cartItemId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Cart item not found"));
 
-        cartItemRepository.delete(cartItem.get());
+        // Delete the cart item
+        cartItemRepository.delete(cartItem);
+
+        // Prevent LazyInitializationException by fetching required data before returning response
+        String foodName = food.getName(); // Pastikan `name` tidak berasal dari lazy relation
 
         return ResponseEntity.ok(Map.of(
                 "message", "Success delete product",
-                "productName", product.get().getName()
+                "productName", foodName
         ));
     }
+
 }
 
