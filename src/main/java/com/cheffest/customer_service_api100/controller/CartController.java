@@ -119,15 +119,15 @@ public class CartController {
         ));
     }
 
-    @DeleteMapping("/delete/{cartItemId}/{foodId}")
+    @DeleteMapping("/delete/{cartId}/{foodId}")
     @Transactional
-    public ResponseEntity<?> deleteCartItem(@PathVariable UUID cartItemId, @PathVariable UUID foodId) {
+    public ResponseEntity<?> deleteCartItem(@PathVariable UUID cartId, @PathVariable UUID foodId) {
         // Fetch food entity
         Food food = foodRepository.findById(foodId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Product not found"));
 
         // Fetch cart item
-        CartItem cartItem = cartItemRepository.findByCartIdAndFoodId(cartItemId, foodId)
+        CartItem cartItem = cartItemRepository.findByCartIdAndFoodId(cartId, foodId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Cart item not found"));
 
         // Delete the cart item
