@@ -92,25 +92,28 @@ public class CartController {
 
 
     @GetMapping("/user/{userId}")
+    @Transactional
     public ResponseEntity<?> getUserCart(@PathVariable UUID userId) {
-        Optional<User> user = userRepository.findById(userId);
-        if (user.isEmpty()) {
+        Optional<User> userOpt = userRepository.findById(userId);
+        if (userOpt.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found!");
         }
 
-        Optional<Cart> cart = cartRepository.findByUserId(userId);
-        if (cart.isEmpty()) {
+        Optional<Cart> cartOpt = cartRepository.findByUserIdWithItems(userId);
+        if (cartOpt.isEmpty()) {
             return ResponseEntity.ok(Map.of("totalPrice", BigDecimal.ZERO, "items", Collections.emptyList()));
         }
 
-        List<CartItem> items = cartItemRepository.findByCartId(cart.get().getId());
+        Cart cart = cartOpt.get();
+
+        List<CartItem> items = cart.getItems();
         BigDecimal totalPrice = items.stream()
                 .map(item -> item.getFood().getPrice().multiply(BigDecimal.valueOf(item.getQuantity())))
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         return ResponseEntity.ok(Map.of(
                 "totalPrice", totalPrice,
-                "cart", cart.get(),
+                "cart", cart,
                 "items", items
         ));
     }
