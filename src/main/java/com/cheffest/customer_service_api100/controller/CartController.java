@@ -135,6 +135,7 @@ public class CartController {
 
         // Prevent LazyInitializationException by fetching required data before returning response
         String foodName = food.getName();
+        // Just get the food price no problem
         BigDecimal foodPrice = food.getPrice();
 
         return ResponseEntity.ok(Map.of(
