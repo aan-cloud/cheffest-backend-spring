@@ -134,11 +134,13 @@ public class CartController {
         cartItemRepository.delete(cartItem);
 
         // Prevent LazyInitializationException by fetching required data before returning response
-        String foodName = food.getName(); // Pastikan `name` tidak berasal dari lazy relation
+        String foodName = food.getName();
+        BigDecimal foodPrice = food.getPrice();
 
         return ResponseEntity.ok(Map.of(
                 "message", "Success delete product",
-                "productName", foodName
+                "productName", foodName,
+                "foodPrice", foodPrice
         ));
     }
 
