@@ -1,16 +1,11 @@
-# Menggunakan image OpenJDK sebagai base image
-FROM openjdk:17-jdk-slim
-
-# Menentukan direktori kerja di dalam container
+FROM maven:3.8.5-openjdk-17-slim AS build
 WORKDIR /app
+COPY pom.xml .
+COPY src ./src
+RUN mvn clean package -DskipTests
 
-# Menyalin file JAR ke dalam container
-COPY target/customer-service-api-1.0.0-0.0.1-SNAPSHOT.jar /app/app.jar
-
-#COPY .env .env
-
-# Menjalankan aplikasi Spring Boot
-ENTRYPOINT ["java", "-jar", "app.jar"]
-
-# Mengexpose port yang digunakan oleh aplikasi
+FROM openjdk:17-jdk-slim
+WORKDIR /app
+COPY --from=build /app/target/*.jar app.jar
 EXPOSE 8080
+ENTRYPOINT ["java", "-jar", "app.jar"]
